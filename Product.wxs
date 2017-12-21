@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" >
+	<Product Id="*" Name="Leer Copy" Language="1033" Version="1.0.0.0" Manufacturer="Weston Berg" UpgradeCode="5fbfce55-31e7-4bc6-bd9f-7f174b248a28" >
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64" />
+    <!-- Sets logic for upgrading of application -->
+		<MajorUpgrade 
+      Schedule="afterInstallValidate"
+      DowngradeErrorMessage="A newer version of [ProductName] is already installed. Setup will now exit." />
+    <!-- MediaTemplate to create embedded cabinet -->
+    <MediaTemplate EmbedCab="yes"/>
+    <!-- Check the .NET framework version 3.5 or greater -->
+    <Property Id="NETFRAMEWORK35" Secure="yes"/>
+    <Property Id="WIX_IS_NETFRAMEWORK_40_OR_LATER_INSTALLED" Secure="yes"/>
+    <Condition Message="Leer copy requires .NET Framework 3.5 or later. Please install correct .NET Framework and retry.">
+      <![CDATA[Installed OR ((NOT NETFRAMEWORK35) OR (NOT WIX_IS_NETFRAMEWORK_40_OR_LATER_INSTALLED))]]>
+    </Condition>
+    <Condition Message="Leer Copy was developed for 64-bit OS. 32-bit OS detected setup exiting...">
+      <![CDATA[(VersionNT64)]]>
+    </Condition>
+    <!-- Icon -->
+    <Icon Id="LeerIcon.exe" SourceFile="$(var.Leer Copy.ProjectDir)LeerIcon.ico"/>
+    <!-- Set Icon in Add/Remove Programs -->
+    <Property Id="ARPPRODUCTICON" Value="LeerIcon.exe" />
+    <!-- Start Menu Shortcut-->
+    <DirectoryRef Id="ApplicationProgramsFolder" >
+      <Component Id="LeerMenuShortcut" Guid="69416a0b-623e-4905-be5a-e1247c2146ff" Win64="yes">
+        <Shortcut Id="LeerStartMenuShortcut"
+                  Name="Leer Copy"
+                  Description="Screen copier app"
+                  Target="[!LeerEXE]"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="LeerIcon.exe" />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" 
+                         Key="Software\Leer Copy" 
+                         Name="installed"
+                         Type="integer"
+                         Value="1"
+                         KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+    <!-- Desktop Shortcut -->
+    <DirectoryRef Id="DesktopFolder">
+        <Component Id="LeerDesktopShortcut" Guid="1d8108bb-079a-41c7-8897-ac18aeb7b111" Win64="yes">
+          <Shortcut Id="LeerDTShortcut" 
+                    Name="Leer Copy"
+                    Description="Screen copier app"
+                    Target="[!LeerEXE]"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Icon="LeerIcon.exe" />
+          <RemoveFolder Id="DesktopFolder" On="uninstall"/>
+          <RegistryValue Root="HKCU" 
+                         Key="Software\Leer Copy" 
+                         Name="installed"
+                         Type="integer"
+                         Value="1"
+                         KeyPath="yes" />
+        </Component>
+    </DirectoryRef>
+    <!-- UI -->
+    <!-- ARPNOMODIFY referenced in WixUI_Minimal.wxs -->
+    <UI>
+      <UIRef Id="WixUI_Minimal" />
+      <Publish Dialog="ExitDialog"
+               Control="Finish"
+               Event="DoAction"
+               Value="LaunchDoc">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+    </UI>
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Open Documentation" />
+    <Property Id="WixShellExecTarget" Value="[#LeerHOWTO]" />
+    <CustomAction Id="LaunchDoc" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+    <!-- Install Features -->
+		<Feature Id="ProductFeature" Title="LeerCopySetup" Description="Installer for Leer Copy App" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="DocumentationImages" />
+      <ComponentRef Id="LeerCopyDataFolder"/>
+      <ComponentRef Id="LeerMenuShortcut" />
+      <ComponentRef Id="LeerDesktopShortcut" />
+		</Feature>
+	</Product>
+  <!-- Directory structure -->
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir" />
+  </Fragment>
+  <!-- Install dir -->
+	<Fragment>
+		<DirectoryRef Id="TARGETDIR" >
+			<Directory Id="ProgramFiles64Folder" >
+				<Directory Id="INSTALLFOLDER" Name="Leer Copy" />
+			</Directory>
+    </DirectoryRef>
+  </Fragment>
+  <!-- Create AppData dir/Delete on uninstall -->
+  <Fragment>
+    <DirectoryRef Id="TARGETDIR">
+      <Directory Id="AppDataFolder">
+        <Directory Id="LeerCopyAppData" Name="Leer Copy" >
+          <Component Id="LeerCopyDataFolder" Guid="e4a0d0c4-58cb-4f81-9bb4-8137acb0100e">
+            <CreateFolder>
+              <util:PermissionEx User="Users" GenericAll="yes"/>
+            </CreateFolder>
+            <RemoveFile Id="DeleteAppData" Name="*" On="uninstall"/>
+            <RemoveFolder Id="DeleteAppDataFolder" Directory="LeerCopyAppData" On="uninstall" />
+            <RegistryValue Root="HKCU" 
+                  Key="Software\Leer Copy" 
+                  Name="installed"
+                  Type="integer"
+                  Value="1"
+                  KeyPath="yes" />
+          </Component>
+        </Directory>
+      </Directory>
+    </DirectoryRef>
+  </Fragment>
+  <!-- Documentation images dir -->
+  <Fragment>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Directory Id="Bin" Name="bin">
+        <Directory Id="DocumentationImagesDir" Name="images" />
+      </Directory>
+    </DirectoryRef>
+   </Fragment>
+  <!-- Start Menu shortcut dir -->
+  <Fragment>
+    <DirectoryRef Id="TARGETDIR" >
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Leer Copy" />
+      </Directory>
+    </DirectoryRef>
+  </Fragment>
+  <!-- Desktop shortcut dir -->
+  <Fragment>
+    <DirectoryRef Id="TARGETDIR" >
+      <Directory Id="DesktopFolder" />
+		</DirectoryRef>
+	</Fragment>
+  <!-- Main product components -->
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER" >
+			<Component Id="ProductComponent" Guid="1e938d93-d7f2-4701-a674-9b375a883249" Win64="yes" >
+        <File Id="LeerEXE" Name="$(var.Leer Copy.TargetFileName)" Source="$(var.Leer Copy.TargetPath)" ProcessorArchitecture="x64" KeyPath="yes" />
+			</Component>
+      <Component Id="ProductDocumentation" Guid="f6e776ad-cc26-4307-8644-2bd6cbbd19d1" Win64="yes" >
+        <File Id="LeerHOWTO" Name="QuickStart.html" Source="$(var.Leer Copy.ProjectDir)..\QuickStart.html" ProcessorArchitecture="x64" KeyPath="yes" />
+      </Component>
+		</ComponentGroup>
+  </Fragment>
+  <!-- Images for documentation -->
+  <Fragment>
+    <ComponentGroup Id="DocumentationImages" Directory="DocumentationImagesDir">
+      <Component Id="KeyboardPic" Guid="88a277d5-0e72-4a71-9532-4596febc876d" Win64="yes" >
+        <File Id="Keyboard" Name="KeyboardMouse.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\KeyboardMouse.png" ProcessorArchitecture="x64" />
+      </Component>
+      <Component Id="LeerIcon" Guid="05ae99da-a230-41f3-ba9d-7a8b06ada403" Win64="yes" >
+        <File Id="Ico" Name="LeerIcon.ico" Source="$(var.Leer Copy.ProjectDir)..\bin\images\LeerIcon.ico" ProcessorArchitecture="x64" KeyPath="yes" />
+      </Component>
+      <Component Id="LeerPic" Guid="a67ebe53-842c-41c1-a649-1baf44ba429a" Win64="yes" >
+        <File Id="IcoPNG" Name="LeerIcon.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\LeerIcon.png" ProcessorArchitecture="x64" KeyPath="yes" />
+      </Component>
+      <Component Id="Selection" Guid="3098e83f-a840-41dd-b4a9-9c3217397d60" Win64="yes" >
+        <File Id="AreaSelect" Name="Selection.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\Selection.png" ProcessorArchitecture="x64" />
+      </Component>
+      <Component Id="SettingsOne" Guid="17ca17c0-85ed-4a9e-95c0-9f698b1cc81f" Win64="yes" >
+        <File Id="Features" Name="SettingsFeaturesOpen.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\SettingsFeaturesOpen.png" ProcessorArchitecture="x64" />
+      </Component>
+      <Component Id="SettingsTwo" Guid="3dba0552-c8e2-42f6-b18b-4ceb9be7da03" Win64="yes" >
+        <File Id="Settings" Name="SettingsWindow.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\SettingsWindow.png" ProcessorArchitecture="x64" />
+      </Component>
+      <Component Id="Tips" Guid="ec0aba5d-7cbf-4e98-ae60-8668e8962ad7" Win64="yes" >
+        <File Id="TipsArea" Name="Tips.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\Tips.png" ProcessorArchitecture="x64" />
+      </Component>
+    </ComponentGroup>
+	</Fragment>
+</Wix>
