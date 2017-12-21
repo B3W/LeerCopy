@@ -12,6 +12,7 @@ some sort of 'popup preview' so you can confirm the accuracy of the selection. N
 after realizing I just missed out on something I wanted include in the capture. Eventually I will also probably include a feature to capture
 an application window via clicking on it.
 
-Source code includes main method, main form, settings form, application manifest, and WIX installer.
+Source code includes main method, main form, settings form, application manifest, and WIX installer. I am new to GitHub so if this is an
+unusual file setup I am open to suggestions.
 
 I enjoyed creating Leer Copy and I hope you enjoy it's utility!
