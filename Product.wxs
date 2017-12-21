@@ -79,6 +79,7 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
     </DirectoryRef>
     <!-- UI -->
     <!-- ARPNOMODIFY referenced in WixUI_Minimal.wxs -->
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.Leer Copy.ProjectDir)LICENSE.rtf"/>
     <UI>
       <UIRef Id="WixUI_Minimal" />
       <Publish Dialog="ExitDialog"
@@ -87,6 +88,7 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
                Value="LaunchDoc">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
     </UI>
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Open Documentation" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Thank you for installing Leer Copy!" />
     <Property Id="WixShellExecTarget" Value="[#LeerHOWTO]" />
     <CustomAction Id="LaunchDoc" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
     <!-- Install Features -->
