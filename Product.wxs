@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" >
-	<Product Id="*" Name="Leer Copy" Language="1033" Version="1.0.0.0" Manufacturer="Weston Berg" UpgradeCode="5fbfce55-31e7-4bc6-bd9f-7f174b248a28" >
+	<Product Id="*" Name="Leer Copy" Language="1033" Version="1.0.0.0" Manufacturer="Weston Berg" UpgradeCode="PUT-GUID-HERE" >
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64" />
     <!-- Sets logic for upgrading of application -->
 		<MajorUpgrade 
@@ -25,7 +25,7 @@
     <Property Id="ARPPRODUCTICON" Value="LeerIcon.exe" />
     <!-- Start Menu Shortcut-->
     <DirectoryRef Id="ApplicationProgramsFolder" >
-      <Component Id="LeerMenuShortcut" Guid="69416a0b-623e-4905-be5a-e1247c2146ff" Win64="yes">
+      <Component Id="LeerMenuShortcut" Guid="PUT-GUID-HERE" Win64="yes">
         <Shortcut Id="LeerStartMenuShortcut"
                   Name="Leer Copy"
                   Description="Screen copier app"
@@ -43,7 +43,7 @@
     </DirectoryRef>
     <!-- Desktop Shortcut -->
     <DirectoryRef Id="DesktopFolder">
-        <Component Id="LeerDesktopShortcut" Guid="1d8108bb-079a-41c7-8897-ac18aeb7b111" Win64="yes">
+        <Component Id="LeerDesktopShortcut" Guid="PUT-GUID-HERE" Win64="yes">
           <Shortcut Id="LeerDTShortcut" 
                     Name="Leer Copy"
                     Description="Screen copier app"
@@ -97,7 +97,7 @@
     <DirectoryRef Id="TARGETDIR">
       <Directory Id="AppDataFolder">
         <Directory Id="LeerCopyAppData" Name="Leer Copy" >
-          <Component Id="LeerCopyDataFolder" Guid="e4a0d0c4-58cb-4f81-9bb4-8137acb0100e">
+          <Component Id="LeerCopyDataFolder" Guid="PUT-GUID-HERE">
             <CreateFolder>
               <util:PermissionEx User="Users" GenericAll="yes"/>
             </CreateFolder>
@@ -139,10 +139,10 @@
   <!-- Main product components -->
 	<Fragment>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER" >
-			<Component Id="ProductComponent" Guid="1e938d93-d7f2-4701-a674-9b375a883249" Win64="yes" >
+			<Component Id="ProductComponent" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="LeerEXE" Name="$(var.Leer Copy.TargetFileName)" Source="$(var.Leer Copy.TargetPath)" ProcessorArchitecture="x64" KeyPath="yes" />
 			</Component>
-      <Component Id="ProductDocumentation" Guid="f6e776ad-cc26-4307-8644-2bd6cbbd19d1" Win64="yes" >
+      <Component Id="ProductDocumentation" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="LeerHOWTO" Name="QuickStart.html" Source="$(var.Leer Copy.ProjectDir)..\QuickStart.html" ProcessorArchitecture="x64" KeyPath="yes" />
       </Component>
 		</ComponentGroup>
@@ -150,25 +150,25 @@
   <!-- Images for documentation -->
   <Fragment>
     <ComponentGroup Id="DocumentationImages" Directory="DocumentationImagesDir">
-      <Component Id="KeyboardPic" Guid="88a277d5-0e72-4a71-9532-4596febc876d" Win64="yes" >
+      <Component Id="KeyboardPic" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="Keyboard" Name="KeyboardMouse.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\KeyboardMouse.png" ProcessorArchitecture="x64" />
       </Component>
-      <Component Id="LeerIcon" Guid="05ae99da-a230-41f3-ba9d-7a8b06ada403" Win64="yes" >
+      <Component Id="LeerIcon" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="Ico" Name="LeerIcon.ico" Source="$(var.Leer Copy.ProjectDir)..\bin\images\LeerIcon.ico" ProcessorArchitecture="x64" KeyPath="yes" />
       </Component>
-      <Component Id="LeerPic" Guid="a67ebe53-842c-41c1-a649-1baf44ba429a" Win64="yes" >
+      <Component Id="LeerPic" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="IcoPNG" Name="LeerIcon.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\LeerIcon.png" ProcessorArchitecture="x64" KeyPath="yes" />
       </Component>
-      <Component Id="Selection" Guid="3098e83f-a840-41dd-b4a9-9c3217397d60" Win64="yes" >
+      <Component Id="Selection" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="AreaSelect" Name="Selection.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\Selection.png" ProcessorArchitecture="x64" />
       </Component>
-      <Component Id="SettingsOne" Guid="17ca17c0-85ed-4a9e-95c0-9f698b1cc81f" Win64="yes" >
+      <Component Id="SettingsOne" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="Features" Name="SettingsFeaturesOpen.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\SettingsFeaturesOpen.png" ProcessorArchitecture="x64" />
       </Component>
-      <Component Id="SettingsTwo" Guid="3dba0552-c8e2-42f6-b18b-4ceb9be7da03" Win64="yes" >
+      <Component Id="SettingsTwo" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="Settings" Name="SettingsWindow.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\SettingsWindow.png" ProcessorArchitecture="x64" />
       </Component>
-      <Component Id="Tips" Guid="ec0aba5d-7cbf-4e98-ae60-8668e8962ad7" Win64="yes" >
+      <Component Id="Tips" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="TipsArea" Name="Tips.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\Tips.png" ProcessorArchitecture="x64" />
       </Component>
     </ComponentGroup>
