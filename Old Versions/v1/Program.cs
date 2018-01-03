@@ -36,7 +36,7 @@ namespace Leer_Copy
             {
                 if (Environment.OSVersion.Version.Major >= 6)
                 {
-                    SetProcessDpiAwareness(DPI_Awareness.DPI_Per_Monitor);
+                    SetProcessDPIAware();
                 }
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
@@ -77,14 +77,7 @@ namespace Leer_Copy
             }
         }
 
-        [System.Runtime.InteropServices.DllImport("shcore.dll")]
-        private static extern int SetProcessDpiAwareness(DPI_Awareness value);
-
-        enum DPI_Awareness
-        {
-            DPI_Unaware = 0,
-            DPI_Aware = 1,
-            DPI_Per_Monitor = 2
-        }
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetProcessDPIAware();
     }
 }

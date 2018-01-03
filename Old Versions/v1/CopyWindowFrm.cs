@@ -79,7 +79,7 @@ namespace Leer_Copy
         /// <summary>
         /// User selected border color
         /// </summary>
-        private Brush brushColor;
+        private Brush brushColor = Brushes.Red;
         /// <summary>
         /// User selected cursor style
         /// </summary>
@@ -106,18 +106,6 @@ namespace Leer_Copy
         /// </summary>
         public Boolean NeedsRestart { get; private set; }
         private Boolean showOnNewLeer;
-        // Fields containing user shortcut keys
-        private Keys quitKey;
-        private Keys clearKey;
-        private Keys tipKey;
-        private Keys newKey;
-        private Keys featuresKey;
-        private Keys selectAllKey;
-        private Keys borderKey;
-        private Keys copyKey;
-        private Keys saveKey;
-        private Keys editKey;
-        private Keys viewKey;
         /// <summary>
         /// XML config file for saving user settings
         /// </summary>
@@ -176,23 +164,23 @@ namespace Leer_Copy
         /// <param name="e"></param>
         private void TransparentFrm_KeyUp(object sender, KeyEventArgs e)
         {
-            if(e.KeyCode == this.quitKey)  // Exit application
+            if(e.KeyCode == Keys.Q || e.KeyCode == Keys.Escape)  // Exit application
             {
                 this.Close();
-            } else if(e.KeyCode == this.clearKey)  // Clear selection
+            } else if(e.KeyCode == Keys.Z)  // Clear selection
             {
                 clrGraphics = true;
                 this.topPicLayer.Invalidate();
                 this.isDrawn = false;
                 this.isDrawing = false;
-            } else if(e.KeyCode == this.tipKey)  // Toggle label tips
+            } else if(e.KeyCode == Keys.T)  // Toggle label tips
             {
                 foreach (Label lbl in this.tipLabels)
                 {
                     lbl.Visible = lbl.Visible ? false : true;
                     this.showTips = lbl.Visible ? true : false;
                 }
-            } else if(e.KeyCode == this.newKey)  
+            } else if(e.KeyCode == Keys.R)  
             {
                 this.transparentFrm.TopMost = false;
                 DialogResult initResponse = MessageBox.Show(this, "Discard current Leer and create new?", "Confirm", MessageBoxButtons.YesNo);
@@ -216,40 +204,140 @@ namespace Leer_Copy
                     this.transparentFrm.TopMost = true;
                 }
                 
-            } else if(e.KeyCode == this.featuresKey)  // Open features window
+            } else if(e.KeyCode == Keys.F)  // Open features window
             {
-                OpenFeatures();
+                this.transparentFrm.TopMost = false;
+                using (FeaturesFrm features = new FeaturesFrm(this.userOpacity, this.pbColor, this.brushColor, this.txtColor,
+                                                                this.userCursor, this.addBorder, this.showTips, this.showFeatureTips,
+                                                                this.featureWinSize))
+                {
+                    features.ShowDialog();
+                    this.userOpacity = features.UserOpacity; // Opacity
+                    this.transparentFrm.Opacity = this.userOpacity;
+                    if(features.UserBackColor.Name.Substring(0,2).ToLower().Equals("ff")) // BackColor
+                    {
+                        this.pbColor = ColorTranslator.FromHtml("#" + features.UserBackColor.Name);
+                    }
+                    else
+                    {
+                        this.pbColor = features.UserBackColor;
+                    }
+                    this.topPicLayer.BackColor = this.pbColor;
+                    this.txtColor = features.UserTxtColor; // Text Color
+                    this.brushColor = features.UserBrushColor; // Brush Color
+                    this.userCursor = features.UserCursor; // Cursor Style
+                    this.transparentFrm.Cursor = this.userCursor;
+                    this.addBorder = features.UserBorder; // Border
+                    this.showTips = features.UserTips; // Tips
+                    this.showFeatureTips = features.isShown; // Feature Tips
+                    this.featureWinSize = features.Size; // Feature Size
+                    if (features.cancel)
+                    {
+                        this.Close();
+                    }
+                    if(features.newLeer)
+                    {
+                        this.NeedsRestart = true;
+                        if (this.showOnNewLeer)
+                        {
+                            DialogResult response = MessageBox.Show(this, "Position window in new location and \nreopen application to start new Leer." +
+                                                                    "\n\nNever show message again?", "Reposition", MessageBoxButtons.YesNo);
+                            if (response == DialogResult.Yes)
+                            {
+                                this.showOnNewLeer = false;
+                            }
+                        }
+                        this.transparentFrm.Hide();
+                        this.WindowState = FormWindowState.Minimized;
+                        this.lastWinState = FormWindowState.Minimized;
+                    }
+                    foreach (Label lbl in this.tipLabels)
+                    {
+                        lbl.Visible = this.showTips ? true : false;
+                        lbl.ForeColor = this.txtColor;
+                    }
+                    this.transparentFrm.TopMost = true;
+                }
+                this.topPicLayer.Invalidate();
             }
-            else if(e.KeyCode == this.selectAllKey)  // Select the entire screen
+            else if(e.KeyCode == Keys.A)  // Select the entire screen
             {
                 this.startPt = new Point(0, 0);
                 this.currPt = new Point(Screen.PrimaryScreen.Bounds.Right, Screen.PrimaryScreen.Bounds.Bottom);
                 this.isDrawing = false;
                 this.isDrawn = true;
                 this.topPicLayer.Invalidate();
-            } else if(e.KeyCode == this.borderKey)  // Toggle border on or off
+            } else if(e.KeyCode == Keys.B)  // Toggle border on or off
             {
                 this.addBorder = this.addBorder ? false : true;
                 this.topPicLayer.Invalidate();
             } else {
                 if (this.isDrawn == true && this.isDrawing == false)  // Make sure user has made a selection
                 {
-                    if (e.KeyCode == this.copyKey)  // Copy selection to clipboard
+                    if (e.KeyCode == Keys.C)  // Copy selection to clipboard
                     {
-                        CopySelection();
+                        Rectangle imagePortion = GetImagePortion(true);
+                        using (Bitmap finalSelection = this.screenIm.Clone(imagePortion, screenIm.PixelFormat))
+                        {
+                            try
+                            {
+                                Clipboard.SetImage(finalSelection);
+                            }
+                            catch (ExternalException)
+                            {
+                                transparentFrm.TopMost = false;
+                                MessageBox.Show(transparentFrm, "ERROR", "Image unable to be copied to clipboard." +
+                                                                         "\nClipboard possibly being used by another process.");
+                                transparentFrm.TopMost = true;
+                            }
+                        }
                     }
-                    else if (e.KeyCode == this.saveKey)  // Save selection as .png
+                    else if (e.KeyCode == Keys.S)  // Save selection as .png
                     {
-                        SaveSelection();
+                        Rectangle imagePortion = GetImagePortion(true);
+                        using (Bitmap finalSelection = this.screenIm.Clone(imagePortion, screenIm.PixelFormat))
+                        {
+                            transparentFrm.TopMost = false;
+                            SaveFileDialog saveFrm = new SaveFileDialog()
+                            {
+                                Title = "Save As",
+                                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
+                                FileName = "Leer_" + DateTime.Now.Day + "_" + DateTime.Now.Month + "_" + DateTime.Now.Year,
+                                Filter = "PNG (*.png)|*.png",
+                                CheckPathExists = true
+                            };
+                            if (saveFrm.ShowDialog() == DialogResult.OK)
+                            {
+                                finalSelection.Save(saveFrm.FileName, System.Drawing.Imaging.ImageFormat.Png);
+                            }
+                            transparentFrm.TopMost = true;
+                        }
                     }
-                    else if (e.KeyCode == this.editKey)  // Send selection to image editor and exit
+                    else if (e.KeyCode == Keys.E)  // Send selection to image editor and exit
                     {
-                        EditSelection();
+                        Rectangle imagePortion = GetImagePortion(true);
+                        using (Bitmap finalSelection = this.screenIm.Clone(imagePortion, screenIm.PixelFormat))
+                        {
+                            transparentFrm.TopMost = false;
+                            String file = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/leer_mspaint_temp_1592629.png";
+                            finalSelection.Save(file, System.Drawing.Imaging.ImageFormat.Png);
+                            System.Diagnostics.ProcessStartInfo stInfo = new System.Diagnostics.ProcessStartInfo(file)
+                            {
+                                Verb = "edit"
+                            };
+                            try
+                            {
+                                System.Diagnostics.Process.Start(stInfo);
+                                this.Dispose();
+                            }
+                            catch (Exception)
+                            {
+                                MessageBox.Show(transparentFrm, "ERROR", "Unable to start image editor. Please try again.");
+                                transparentFrm.TopMost = true;
+                            }
+                        }
                     }
-                    else if (e.KeyCode == this.viewKey) // View selection in a popup
-                    {
-                        ViewSelection();
-                    }
+                    
                 }
             }
         } // CopyWindowFrm_KeyUp
@@ -434,7 +522,7 @@ namespace Leer_Copy
                     this.Close();
                 }
             }
-        } // CopyWindowFrm_Resize
+        }
 
         /// <summary>
         /// Saves users settings to the config file.
@@ -497,29 +585,6 @@ namespace Leer_Copy
                     writer.WriteEndElement();
                     // Show message on new leer
                     writer.WriteStartElement("OnNewLeer");
-                    writer.WriteEndElement();
-                    // Key Shortcuts
-                    writer.WriteStartElement("QuitKey");
-                    writer.WriteEndElement();
-                    writer.WriteStartElement("ClearKey");
-                    writer.WriteEndElement();
-                    writer.WriteStartElement("TipKey");
-                    writer.WriteEndElement();
-                    writer.WriteStartElement("NewKey");
-                    writer.WriteEndElement();
-                    writer.WriteStartElement("FeaturesKey");
-                    writer.WriteEndElement();
-                    writer.WriteStartElement("SelectAllKey");
-                    writer.WriteEndElement();
-                    writer.WriteStartElement("BorderKey");
-                    writer.WriteEndElement();
-                    writer.WriteStartElement("CopyKey");
-                    writer.WriteEndElement();
-                    writer.WriteStartElement("SaveKey");
-                    writer.WriteEndElement();
-                    writer.WriteStartElement("EditKey");
-                    writer.WriteEndElement();
-                    writer.WriteStartElement("ViewKey");
                     writer.WriteEndElement();
                     // Close the document
                     writer.WriteEndElement();
@@ -639,105 +704,6 @@ namespace Leer_Copy
             {
                 WriteNode(configDoc, "OnNewLeer", XmlConvert.ToString(this.showOnNewLeer));
             }
-            // Shortcut Keys
-            XElement quitKeyNode = QueryConfig(configDoc, "QuitKey");
-            if (quitKeyNode != null)
-            {
-                quitKeyNode.SetValue(XmlConvert.ToString((int)quitKey));
-            } else
-            {
-                WriteNode(configDoc, "QuitKey", XmlConvert.ToString((int)quitKey));
-            }
-            XElement clearKeyNode = QueryConfig(configDoc, "ClearKey");
-            if (clearKeyNode != null)
-            {
-                clearKeyNode.SetValue(XmlConvert.ToString((int)clearKey));
-            }
-            else
-            {
-                WriteNode(configDoc, "ClearKey", XmlConvert.ToString((int)clearKey));
-            }
-            XElement tipKeyNode = QueryConfig(configDoc, "TipKey");
-            if (tipKeyNode != null)
-            {
-                tipKeyNode.SetValue(XmlConvert.ToString((int)tipKey));
-            }
-            else
-            {
-                WriteNode(configDoc, "TipKey", XmlConvert.ToString((int)tipKey));
-            }
-            XElement newKeyNode = QueryConfig(configDoc, "NewKey");
-            if (newKeyNode != null)
-            {
-                newKeyNode.SetValue(XmlConvert.ToString((int)newKey));
-            }
-            else
-            {
-                WriteNode(configDoc, "NewKey", XmlConvert.ToString((int)newKey));
-            }
-            XElement featuresKeyNode = QueryConfig(configDoc, "FeaturesKey");
-            if (featuresKeyNode != null)
-            {
-                featuresKeyNode.SetValue(XmlConvert.ToString((int)featuresKey));
-            }
-            else
-            {
-                WriteNode(configDoc, "FeaturesKey", XmlConvert.ToString((int)featuresKey));
-            }
-            XElement selectKeyNode = QueryConfig(configDoc, "SelectAllKey");
-            if (selectKeyNode != null)
-            {
-                selectKeyNode.SetValue(XmlConvert.ToString((int)selectAllKey));
-            }
-            else
-            {
-                WriteNode(configDoc, "SelectAllKey", XmlConvert.ToString((int)selectAllKey));
-            }
-            XElement borderKeyNode = QueryConfig(configDoc, "BorderKey");
-            if (borderKeyNode != null)
-            {
-                borderKeyNode.SetValue(XmlConvert.ToString((int)borderKey));
-            }
-            else
-            {
-                WriteNode(configDoc, "BorderKey", XmlConvert.ToString((int)borderKey));
-            }
-            XElement copyKeyNode = QueryConfig(configDoc, "CopyKey");
-            if (copyKeyNode != null)
-            {
-                copyKeyNode.SetValue(XmlConvert.ToString((int)copyKey));
-            }
-            else
-            {
-                WriteNode(configDoc, "CopyKey", XmlConvert.ToString((int)copyKey));
-            }
-            XElement saveKeyNode = QueryConfig(configDoc, "SaveKey");
-            if (saveKeyNode != null)
-            {
-                saveKeyNode.SetValue(XmlConvert.ToString((int)saveKey));
-            }
-            else
-            {
-                WriteNode(configDoc, "SaveKey", XmlConvert.ToString((int)saveKey));
-            }
-            XElement editKeyNode = QueryConfig(configDoc, "EditKey");
-            if (editKeyNode != null)
-            {
-                editKeyNode.SetValue(XmlConvert.ToString((int)editKey));
-            }
-            else
-            {
-                WriteNode(configDoc, "EditKey", XmlConvert.ToString((int)editKey));
-            }
-            XElement viewKeyNode = QueryConfig(configDoc, "ViewKey");
-            if (viewKeyNode != null)
-            {
-                viewKeyNode.SetValue(XmlConvert.ToString((int)viewKey));
-            }
-            else
-            {
-                WriteNode(configDoc, "ViewKey", XmlConvert.ToString((int)viewKey));
-            }
             // Close document
             configDoc.Save(configFile);
             Log("Settings saved successfully. Exiting...");
@@ -747,7 +713,7 @@ namespace Leer_Copy
                 File.Create(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "/Leer Copy/log.txt").Close();
             }
             this.Dispose();
-        } // CopyWindowFrm_FormClosing
+        }
 
         /// <summary>
         /// Paints portion of image that has been selected to the screen
@@ -795,7 +761,7 @@ namespace Leer_Copy
                         loc.Y = startPt.Y - 2;
                     }
                     e.Graphics.DrawRectangle(new Pen(brushColor, 4), new Rectangle(loc, new Size(width, height)));
-                } 
+                }  // Add border around the selection
             } else
             {
                 e.Graphics.Clear(pbColor);
@@ -978,194 +944,6 @@ namespace Leer_Copy
                 {
                     this.showOnNewLeer = true;
                 }
-                // Keys
-                XElement quitKeyNode = QueryConfig(configDoc, "QuitKey");
-                if (quitKeyNode != null)
-                {
-                    try
-                    {
-                        int.TryParse(quitKeyNode.Value, out int temp);
-                        quitKey = (Keys)temp;
-                    }
-                    catch (Exception)
-                    {
-                        this.quitKey = Keys.Q;
-                    }
-                }
-                else
-                {
-                    this.quitKey = Keys.Q;
-                }
-                XElement clearKeyNode = QueryConfig(configDoc, "ClearKey");
-                if (clearKeyNode != null)
-                {
-                    try
-                    {
-                        int.TryParse(clearKeyNode.Value, out int temp);
-                        clearKey = (Keys)temp;
-                    }
-                    catch (Exception)
-                    {
-                        this.clearKey = Keys.Z;
-                    }
-                }
-                else
-                {
-                    this.clearKey = Keys.Z;
-                }
-                XElement tipKeyNode = QueryConfig(configDoc, "TipKey");
-                if (tipKeyNode != null)
-                {
-                    try
-                    {
-                        int.TryParse(tipKeyNode.Value, out int temp);
-                        tipKey = (Keys)temp;
-                    }
-                    catch (Exception)
-                    {
-                        this.tipKey = Keys.T;
-                    }
-                }
-                else
-                {
-                    this.tipKey = Keys.T;
-                }
-                XElement newKeyNode = QueryConfig(configDoc, "NewKey");
-                if (newKeyNode != null)
-                {
-                    try
-                    {
-                        int.TryParse(newKeyNode.Value, out int temp);
-                        newKey = (Keys)temp;
-                    }
-                    catch (Exception)
-                    {
-                        this.newKey = Keys.R;
-                    }
-                }
-                else
-                {
-                    this.newKey = Keys.R;
-                }
-                XElement featuresKeyNode = QueryConfig(configDoc, "FeaturesKey");
-                if (featuresKeyNode != null)
-                {
-                    try
-                    {
-                        int.TryParse(featuresKeyNode.Value, out int temp);
-                        featuresKey = (Keys)temp;
-                    }
-                    catch (Exception)
-                    {
-                        this.featuresKey = Keys.F;
-                    }
-                }
-                else
-                {
-                    this.featuresKey = Keys.F;
-                }
-                XElement selectKeyNode = QueryConfig(configDoc, "SelectAllKey");
-                if (selectKeyNode != null)
-                {
-                    try
-                    {
-                        int.TryParse(selectKeyNode.Value, out int temp);
-                        selectAllKey = (Keys)temp;
-                    }
-                    catch (Exception)
-                    {
-                        this.selectAllKey = Keys.A;
-                    }
-                }
-                else
-                {
-                    this.selectAllKey = Keys.A;
-                }
-                XElement borderKeyNode = QueryConfig(configDoc, "BorderKey");
-                if (borderKeyNode != null)
-                {
-                    try
-                    {
-                        int.TryParse(borderKeyNode.Value, out int temp);
-                        borderKey = (Keys)temp;
-                    }
-                    catch (Exception)
-                    {
-                        this.borderKey = Keys.B;
-                    }
-                }
-                else
-                {
-                    this.borderKey = Keys.B;
-                }
-                XElement copyKeyNode = QueryConfig(configDoc, "CopyKey");
-                if (copyKeyNode != null)
-                {
-                    try
-                    {
-                        int.TryParse(copyKeyNode.Value, out int temp);
-                        copyKey = (Keys)temp;
-                    }
-                    catch (Exception)
-                    {
-                        this.copyKey = Keys.C;
-                    }
-                }
-                else
-                {
-                    this.copyKey = Keys.C;
-                }
-                XElement saveKeyNode = QueryConfig(configDoc, "SaveKey");
-                if (saveKeyNode != null)
-                {
-                    try
-                    {
-                        int.TryParse(saveKeyNode.Value, out int temp);
-                        saveKey = (Keys)temp;
-                    }
-                    catch (Exception)
-                    {
-                        this.saveKey = Keys.S;
-                    }
-                }
-                else
-                {
-                    this.saveKey = Keys.S;
-                }
-                XElement editKeyNode = QueryConfig(configDoc, "EditKey");
-                if (editKeyNode != null)
-                {
-                    try
-                    {
-                        int.TryParse(editKeyNode.Value, out int temp);
-                        editKey = (Keys)temp;
-                    }
-                    catch (Exception)
-                    {
-                        this.editKey = Keys.E;
-                    }
-                }
-                else
-                {
-                    this.editKey = Keys.E;
-                }
-                XElement viewKeyNode = QueryConfig(configDoc, "ViewKey");
-                if (viewKeyNode != null)
-                {
-                    try
-                    {
-                        int.TryParse(viewKeyNode.Value, out int temp);
-                        viewKey = (Keys)temp;
-                    }
-                    catch (Exception)
-                    {
-                        this.viewKey = Keys.V;
-                    }
-                }
-                else
-                {
-                    this.viewKey = Keys.V;
-                }
                 // Close document
                 configDoc.Save(configFile);
                 Log("InitSettings function returning...");
@@ -1182,22 +960,11 @@ namespace Leer_Copy
                 this.showFeatureTips = true;
                 this.featureWinSize = new Size(430, 390);
                 this.showOnNewLeer = true;
-                this.quitKey = Keys.Q;
-                this.clearKey = Keys.Z;
-                this.tipKey = Keys.T;
-                this.newKey = Keys.R;
-                this.featuresKey = Keys.F;
-                this.selectAllKey = Keys.A;
-                this.borderKey = Keys.B;
-                this.copyKey = Keys.C;
-                this.saveKey = Keys.S;
-                this.editKey = Keys.E;
-                this.viewKey = Keys.V;
                 Thread.Sleep(300);
                 Log("InitSettings function returning with defaults...");
                 return;
             }
-        } // InitSettings
+        }
 
         // Helper method for determining selected area
         private Rectangle GetImagePortion(Boolean save)
@@ -1271,91 +1038,6 @@ namespace Leer_Copy
         // Copies the users selection to the clipboard in Context Menu
         private void CopySelection_Click(object sender, EventArgs e)
         {
-            CopySelection();
-        } // CopySelection_Click
-
-        // Saves users selection in Context Menu
-        private void SaveSelection_Click(object sender, EventArgs e)
-        {
-            if (this.isDrawn == true && this.isDrawing == false && ComparePoints(this.startPt, this.currPt) != -1)  // Make sure user has made a selection
-            {
-                SaveSelection();
-            }
-        } // SaveSelection_Click
-
-        // Sends users selection to default editor in Context Menu
-        private void EditSelection_Click(object sender, EventArgs e)
-        {
-            if (this.isDrawn == true && this.isDrawing == false && ComparePoints(this.startPt, this.currPt) != -1)  // Make sure user has made a selection
-            {
-                EditSelection();
-            }
-        } // EditSelection_Click
-
-        // Sends user to viewing window in Context Menu
-        private void ViewSelection_Click(object sender, EventArgs e)
-        {
-            ViewSelection();
-        }
-
-        // Sends user to features window in Context Menu
-        private void Settings_Click(object sender, EventArgs e)
-        {
-            OpenFeatures();
-        } // Settings_Click
-
-        // Funtion for editing in default editor
-        private void EditSelection()
-        {
-            Rectangle imagePortion = GetImagePortion(true);
-            using (Bitmap finalSelection = this.screenIm.Clone(imagePortion, screenIm.PixelFormat))
-            {
-                transparentFrm.TopMost = false;
-                String file = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/leer_mspaint_temp_1592629.png";
-                finalSelection.Save(file, System.Drawing.Imaging.ImageFormat.Png);
-                System.Diagnostics.ProcessStartInfo stInfo = new System.Diagnostics.ProcessStartInfo(file)
-                {
-                    Verb = "edit"
-                };
-                try
-                {
-                    System.Diagnostics.Process.Start(stInfo);
-                    this.Close();
-                }
-                catch (Exception)
-                {
-                    MessageBox.Show(transparentFrm, "ERROR", "Unable to start image editor. Please try again.");
-                    transparentFrm.TopMost = true;
-                }
-            }
-        } // EditSelection
-
-        // Function for saving to PNG
-        private void SaveSelection()
-        {
-            Rectangle imagePortion = GetImagePortion(true);
-            using (Bitmap finalSelection = this.screenIm.Clone(imagePortion, screenIm.PixelFormat))
-            {
-                transparentFrm.TopMost = false;
-                SaveFileDialog saveFrm = new SaveFileDialog()
-                {
-                    Title = "Save As",
-                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
-                    FileName = "Leer_" + DateTime.Now.Day + "_" + DateTime.Now.Month + "_" + DateTime.Now.Year,
-                    Filter = "PNG (*.png)|*.png",
-                    CheckPathExists = true
-                };
-                if (saveFrm.ShowDialog() == DialogResult.OK)
-                {
-                    finalSelection.Save(saveFrm.FileName, System.Drawing.Imaging.ImageFormat.Png);
-                }
-                transparentFrm.TopMost = true;
-            }
-        } // SaveSelection
-
-        // Function for saving to clipboard
-        private void CopySelection()
-        {
             if (this.isDrawn == true && this.isDrawing == false && ComparePoints(this.startPt, this.currPt) != -1)  // Make sure user has made a selection
             {
                 Rectangle imagePortion = GetImagePortion(true);
@@ -1374,142 +1056,62 @@ namespace Leer_Copy
                     }
                 }
             }
-        } // CopySelection
+        }
 
-        // Function for viewing selection in popup window
-        private void ViewSelection()
+        // Saves users selection in Context Menu
+        private void SaveSelection_Click(object sender, EventArgs e)
         {
             if (this.isDrawn == true && this.isDrawing == false && ComparePoints(this.startPt, this.currPt) != -1)  // Make sure user has made a selection
             {
-                this.transparentFrm.TopMost = false;
                 Rectangle imagePortion = GetImagePortion(true);
-                using (Bitmap viewSelection = this.screenIm.Clone(imagePortion, this.screenIm.PixelFormat))
+                using (Bitmap finalSelection = this.screenIm.Clone(imagePortion, screenIm.PixelFormat))
                 {
-                    using (Form viewFrm = new Form
+                    transparentFrm.TopMost = false;
+                    SaveFileDialog saveFrm = new SaveFileDialog()
                     {
-                        FormBorderStyle = FormBorderStyle.None,
-                        StartPosition = FormStartPosition.CenterScreen,
-                        Size = new Size(imagePortion.Size.Width + 15, imagePortion.Size.Height + 15),
-                        BackColor = Color.White,
-                        Icon = this.Icon,
-                    })
+                        Title = "Save As",
+                        InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
+                        FileName = "Leer_" + DateTime.Now.Day + "_" + DateTime.Now.Month + "_" + DateTime.Now.Year,
+                        Filter = "PNG (*.png)|*.png",
+                        CheckPathExists = true
+                    };
+                    if (saveFrm.ShowDialog() == DialogResult.OK)
                     {
-                        viewFrm.KeyUp += delegate (object sender, KeyEventArgs e) // Key handler for closing the popup
-                        {
-                            if (e.KeyCode == this.viewKey || e.KeyCode == Keys.Escape)
-                            {
-                                viewFrm.Hide();
-                            }
-                        };
-                        // Check selection size
-                        Size viewSize = imagePortion.Size;
-                        if (viewFrm.Size.Width >= Screen.PrimaryScreen.Bounds.Width && viewFrm.Size.Height >= Screen.PrimaryScreen.Bounds.Height) 
-                        {
-                            viewFrm.Size = Screen.PrimaryScreen.Bounds.Size;
-                        }
-                        else if (viewFrm.Size.Width >= Screen.PrimaryScreen.Bounds.Width)
-                        {
-                            viewFrm.Width = Screen.PrimaryScreen.Bounds.Width;
-                        }
-                        else if (viewFrm.Size.Height >= Screen.PrimaryScreen.Bounds.Height)
-                        {
-                            viewFrm.Height = Screen.PrimaryScreen.Bounds.Height;
-                        }
-                        PictureBox viewPB = new PictureBox
-                        {
-                            Image = viewSelection,
-                            Size = viewSize
-                        };
-                        viewPB.Location = new Point((viewFrm.Width / 2) - (viewPB.Width / 2), (viewFrm.Height / 2) - (viewPB.Height / 2));
-                        viewFrm.Controls.Add(viewPB);
-                        // Darken background
-                        using (Panel p = new Panel
-                        {
-                            BackColor = Color.Black,
-                            Size = this.transparentFrm.Size
-                        })
-                        {
-                            this.transparentFrm.Controls.Add(p);
-                            p.BringToFront();
-                            viewFrm.ShowDialog();
-                        }
+                        finalSelection.Save(saveFrm.FileName, System.Drawing.Imaging.ImageFormat.Png);
                     }
+                    transparentFrm.TopMost = true;
                 }
-                this.transparentFrm.TopMost = true;
             }
-        } // ViewSelection
+        }
 
-        // Function to open the features window
-        private void OpenFeatures()
+        // Sends users selection to default editor in Context Menu
+        private void EditSelection_Click(object sender, EventArgs e)
         {
-            this.transparentFrm.TopMost = false;
-            using (FeaturesFrm features = new FeaturesFrm(this.userOpacity, this.pbColor, this.brushColor, this.txtColor,
-                                                            this.userCursor, this.addBorder, this.showTips, this.showFeatureTips,
-                                                            this.featureWinSize, new Keys[] { quitKey, clearKey, tipKey, newKey,
-                                                            featuresKey, selectAllKey, borderKey, copyKey, saveKey, editKey, viewKey }))
+            if (this.isDrawn == true && this.isDrawing == false && ComparePoints(this.startPt, this.currPt) != -1)  // Make sure user has made a selection
             {
-                features.ShowDialog();
-                this.userOpacity = features.UserOpacity; // Opacity
-                this.transparentFrm.Opacity = this.userOpacity;
-                if (features.UserBackColor.Name.Substring(0, 2).ToLower().Equals("ff")) // BackColor
+                Rectangle imagePortion = GetImagePortion(true);
+                using (Bitmap finalSelection = this.screenIm.Clone(imagePortion, screenIm.PixelFormat))
                 {
-                    this.pbColor = ColorTranslator.FromHtml("#" + features.UserBackColor.Name);
-                }
-                else
-                {
-                    this.pbColor = features.UserBackColor;
-                }
-                this.topPicLayer.BackColor = this.pbColor;
-                this.txtColor = features.UserTxtColor; // Text Color
-                this.brushColor = features.UserBrushColor; // Brush Color
-                this.userCursor = features.UserCursor; // Cursor Style
-                this.transparentFrm.Cursor = this.userCursor;
-                this.addBorder = features.UserBorder; // Border
-                this.showTips = features.UserTips; // Tips
-                this.showFeatureTips = features.isShown; // Feature Tips
-                this.featureWinSize = features.Size; // Feature Size
-                // SET KEYS
-                this.quitKey = features.QuitKey;
-                this.clearKey = features.ClearKey;
-                this.tipKey = features.TipKey;
-                this.newKey = features.NewKey;
-                this.featuresKey = features.FeaturesKey;
-                this.selectAllKey = features.SelectAllKey;
-                this.borderKey = features.BorderKey;
-                this.copyKey = features.CopyKey;
-                this.saveKey = features.SaveKey;
-                this.editKey = features.EditKey;
-                this.viewKey = features.ViewKey;
-                if (features.cancel)
-                {
-                    this.Close();
-                }
-                if (features.newLeer)
-                {
-                    this.NeedsRestart = true;
-                    if (this.showOnNewLeer)
+                    transparentFrm.TopMost = false;
+                    String file = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "/leer_mspaint_temp_1592629.png";
+                    finalSelection.Save(file, System.Drawing.Imaging.ImageFormat.Png);
+                    System.Diagnostics.ProcessStartInfo stInfo = new System.Diagnostics.ProcessStartInfo(file)
                     {
-                        DialogResult response = MessageBox.Show(this, "Position window in new location and \nreopen application to start new Leer." +
-                                                                "\n\nNever show message again?", "Reposition", MessageBoxButtons.YesNo);
-                        if (response == DialogResult.Yes)
-                        {
-                            this.showOnNewLeer = false;
-                        }
+                        Verb = "edit"
+                    };
+                    try
+                    {
+                        System.Diagnostics.Process.Start(stInfo);
+                        this.Dispose();
                     }
-                    this.transparentFrm.Hide();
-                    this.WindowState = FormWindowState.Minimized;
-                    this.lastWinState = FormWindowState.Minimized;
+                    catch (Exception)
+                    {
+                        MessageBox.Show(transparentFrm, "ERROR", "Unable to start image editor. Please try again.");
+                        transparentFrm.TopMost = true;
+                    }
                 }
-                ConfigureTipLabelTxt();
-                foreach (Label lbl in this.tipLabels)
-                {
-                    lbl.Visible = this.showTips ? true : false;
-                    lbl.ForeColor = this.txtColor;
-                }
-                this.transparentFrm.TopMost = true;
             }
-            this.topPicLayer.Invalidate();
-        } // OpenFeatures
+        }
         
         // Sets the right click context menu for the top picture box
         private void AddContextMenu()
@@ -1518,8 +1120,6 @@ namespace Leer_Copy
             cmenu.MenuItems.Add(new MenuItem("Copy", CopySelection_Click));
             cmenu.MenuItems.Add(new MenuItem("Edit", EditSelection_Click));
             cmenu.MenuItems.Add(new MenuItem("Save", SaveSelection_Click));
-            cmenu.MenuItems.Add(new MenuItem("View", ViewSelection_Click));
-            cmenu.MenuItems.Add(new MenuItem("Settings", Settings_Click));
             MenuItem exit = new MenuItem("Exit");
             exit.Click += delegate (object sender, EventArgs e)
             {
@@ -1527,7 +1127,7 @@ namespace Leer_Copy
             };
             cmenu.MenuItems.Add(exit);
             topPicLayer.ContextMenu = cmenu;
-        } // AddContextMenu
+        }
 
         // Helper method to enumerate over cursor options
         private Cursor SelectCursor(string cursor)
@@ -1545,7 +1145,7 @@ namespace Leer_Copy
                 default:
                     return Cursors.Hand;
             }
-        } // SelectCursor
+        }
 
         // Configures tip labels on startup
         private void ConfigureTipLabels(Boolean show)
@@ -1554,7 +1154,7 @@ namespace Leer_Copy
             int rightScreen = Screen.PrimaryScreen.Bounds.Right;
             Label Ebtn = new Label()
             {
-                Text = this.editKey + " - Edit with default editor",
+                Text = "E - Edit with default editor",
                 TextAlign = ContentAlignment.MiddleLeft,
                 Font = new Font(FontFamily.GenericSansSerif, 12),
                 ForeColor = txtColor,
@@ -1564,7 +1164,7 @@ namespace Leer_Copy
             };
             Label Sbtn = new Label()
             {
-                Text = this.saveKey + " - Save image to file",
+                Text = "S - Save image to file",
                 TextAlign = ContentAlignment.MiddleLeft,
                 Font = new Font(FontFamily.GenericSansSerif, 12),
                 ForeColor = txtColor,
@@ -1574,7 +1174,7 @@ namespace Leer_Copy
             };
             Label Abtn = new Label()
             {
-                Text = this.selectAllKey + " - Select entire screen",
+                Text = "A - Select entire screen",
                 TextAlign = ContentAlignment.MiddleLeft,
                 Font = new Font(FontFamily.GenericSansSerif, 12),
                 ForeColor = txtColor,
@@ -1584,7 +1184,7 @@ namespace Leer_Copy
             };
             Label Cbtn = new Label()
             {
-                Text = this.copyKey + " - Copy to clipboard",
+                Text = "C - Copy to clipboard",
                 TextAlign = ContentAlignment.MiddleLeft,
                 Font = new Font(FontFamily.GenericSansSerif, 12),
                 ForeColor = txtColor,
@@ -1594,7 +1194,17 @@ namespace Leer_Copy
             };
             Label Zbtn = new Label()
             {
-                Text = this.clearKey + " - Clear selection",
+                Text = "Z - Clear selection",
+                TextAlign = ContentAlignment.MiddleLeft,
+                Font = new Font(FontFamily.GenericSansSerif, 12),
+                ForeColor = txtColor,
+                BackColor = Color.Transparent,
+                AutoSize = true,
+                Location = new Point(rightScreen - 300, 300)
+            };
+            Label Rbtn = new Label()
+            {
+                Text = "R - New Leer",
                 TextAlign = ContentAlignment.MiddleLeft,
                 Font = new Font(FontFamily.GenericSansSerif, 12),
                 ForeColor = txtColor,
@@ -1602,9 +1212,9 @@ namespace Leer_Copy
                 AutoSize = true,
                 Location = new Point(rightScreen - 300, 350)
             };
-            Label Rbtn = new Label()
+            Label Tbtn = new Label()
             {
-                Text = this.newKey + " - New Leer",
+                Text = "T - Tips on/off",
                 TextAlign = ContentAlignment.MiddleLeft,
                 Font = new Font(FontFamily.GenericSansSerif, 12),
                 ForeColor = txtColor,
@@ -1612,25 +1222,15 @@ namespace Leer_Copy
                 AutoSize = true,
                 Location = new Point(rightScreen - 300, 400)
             };
-            Label Tbtn = new Label()
+            Label Fbtn = new Label()
             {
-                Text = this.tipKey + " - Tips on/off",
+                Text = "F - Features window",
                 TextAlign = ContentAlignment.MiddleLeft,
                 Font = new Font(FontFamily.GenericSansSerif, 12),
                 ForeColor = txtColor,
                 BackColor = Color.Transparent,
                 AutoSize = true,
                 Location = new Point(rightScreen - 300, 450)
-            };
-            Label Fbtn = new Label()
-            {
-                Text = this.featuresKey + " - Features window",
-                TextAlign = ContentAlignment.MiddleLeft,
-                Font = new Font(FontFamily.GenericSansSerif, 12),
-                ForeColor = txtColor,
-                BackColor = Color.Transparent,
-                AutoSize = true,
-                Location = new Point(rightScreen - 300, 500)
             };
             Label Arrowkeys = new Label()
             {
@@ -1640,29 +1240,19 @@ namespace Leer_Copy
                 ForeColor = txtColor,
                 BackColor = Color.Transparent,
                 AutoSize = true,
-                Location = new Point(rightScreen - 300, 600)
+                Location = new Point(rightScreen - 300, 550)
             };
             Label Qbtn = new Label()
             {
-                Text = this.quitKey + " - Quit application",
+                Text = "Q - Quit application",
                 TextAlign = ContentAlignment.MiddleLeft,
                 Font = new Font(FontFamily.GenericSansSerif, 12),
                 ForeColor = txtColor,
                 BackColor = Color.Transparent,
                 AutoSize = true,
-                Location = new Point(rightScreen - 300, 550)
+                Location = new Point(rightScreen - 300, 500)
             };
-            Label Vbtn = new Label()
-            {
-                Text = this.viewKey + " - View selection",
-                TextAlign = ContentAlignment.MiddleLeft,
-                Font = new Font(FontFamily.GenericSansSerif, 12),
-                ForeColor = txtColor,
-                BackColor = Color.Transparent,
-                AutoSize = true,
-                Location = new Point(rightScreen - 300, 300)
-            };
-            this.tipLabels = new Label[] { Ebtn, Sbtn, Abtn, Cbtn, Zbtn, Rbtn, Tbtn, Fbtn, Arrowkeys, Qbtn, Vbtn};
+            this.tipLabels = new Label[] { Ebtn, Sbtn, Abtn, Cbtn, Zbtn, Rbtn, Tbtn, Fbtn, Arrowkeys, Qbtn};
             foreach (Label lbl in tipLabels)
             {
                 this.topPicLayer.Controls.Add(lbl);
@@ -1672,21 +1262,6 @@ namespace Leer_Copy
                 }
             }
         } // ConfigureTipLabels
-
-        // Configure Tip Label Text when shortcut keys changed
-        private void ConfigureTipLabelTxt()
-        {
-            tipLabels[0].Text = this.editKey + " - Edit with default editor";
-            tipLabels[1].Text = this.saveKey + " - Save image to file";
-            tipLabels[2].Text = this.selectAllKey + " - Select entire screen";
-            tipLabels[3].Text = this.copyKey + " - Copy to clipboard";
-            tipLabels[4].Text = this.clearKey + " - Clear selection";
-            tipLabels[5].Text = this.newKey + " - New Leer";
-            tipLabels[6].Text = this.tipKey + " - Tips on/off";
-            tipLabels[7].Text = this.featuresKey + " - Features window";
-            tipLabels[9].Text = this.quitKey + " - Quit application";
-            tipLabels[10].Text = this.viewKey + " - View selection";
-        }
 
         // Helper method for saving settings to and retrieving them from config file
         private XElement QueryConfig(XDocument doc, string query)
@@ -1699,7 +1274,7 @@ namespace Leer_Copy
                 return item;
             }
             return null;
-        } // QueryConfig
+        }
 
         // Helper method for writing missing nodes to the config file
         private void WriteNode(XDocument doc, string node, string value)
@@ -1707,7 +1282,7 @@ namespace Leer_Copy
             XElement root = new XElement(node);
             root.SetValue(value);
             doc.Element("Properties").Add(root);
-        } // WriteNode
+        }
 
         // Writes string to log file
         private void Log(string str)
@@ -1732,6 +1307,6 @@ namespace Leer_Copy
                     // Continue execution of app even if logging does not work
                 }
             }
-        } // Log
+        }
     }
 }

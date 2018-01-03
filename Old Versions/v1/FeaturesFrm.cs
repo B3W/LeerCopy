@@ -34,17 +34,6 @@ namespace Leer_Copy
         public Cursor UserCursor { get; private set; }
         public Boolean UserBorder { get; private set; }
         public Boolean UserTips { get; private set; }
-        public Keys QuitKey { get; private set; }
-        public Keys ClearKey { get; private set; }
-        public Keys TipKey { get; private set; }
-        public Keys NewKey { get; private set; }
-        public Keys FeaturesKey { get; private set; }
-        public Keys SelectAllKey { get; private set; }
-        public Keys BorderKey { get; private set; }
-        public Keys CopyKey { get; private set; }
-        public Keys SaveKey { get; private set; }
-        public Keys EditKey { get; private set; }
-        public Keys ViewKey { get; private set; }
         // Variables for main form to proccess
         public Boolean cancel { get; private set; }
         public Boolean isShown { get; private set; }
@@ -63,7 +52,7 @@ namespace Leer_Copy
         /// <param name="showTips"></param>
         public FeaturesFrm(Double opacity, Color backgroundColor, Brush brushColor, Color txtColor,
                             Cursor cursorStyle, Boolean addBorder, Boolean showTips, Boolean showFeatureTips,
-                            Size winSize, Keys[] shortcutKeys)
+                            Size winSize)
         {
             InitializeComponent();
             this.KeyPreview = true;
@@ -79,17 +68,6 @@ namespace Leer_Copy
             this.SizeChanged += new EventHandler(FeaturesFrm_SizeChanged);
             this.tipLabels = new Label[] { fLbl, rLbl, cLbl, qLbl, tLbl};
             this.Size = winSize;
-            this.QuitKey = shortcutKeys[0];
-            this.ClearKey = shortcutKeys[1];
-            this.TipKey = shortcutKeys[2];
-            this.NewKey = shortcutKeys[3];
-            this.FeaturesKey = shortcutKeys[4];
-            this.SelectAllKey = shortcutKeys[5];
-            this.BorderKey = shortcutKeys[6];
-            this.CopyKey = shortcutKeys[7];
-            this.SaveKey = shortcutKeys[8];
-            this.EditKey = shortcutKeys[9];
-            this.ViewKey = shortcutKeys[10];
             // Configure control locations
             SetControlLocations();
             // Keep shown/hidden option from last opened session
@@ -351,42 +329,6 @@ namespace Leer_Copy
             this.UserTxtColor = Color.Black;
         } // default text color
 
-        // Key shortcut options
-        private void setKeysToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            using (KeyShortcutFrm ksFrm = new KeyShortcutFrm(QuitKey, ClearKey, TipKey, NewKey, FeaturesKey,
-                                                            SelectAllKey, BorderKey, CopyKey, SaveKey, EditKey, ViewKey))
-            {
-                ksFrm.ShowDialog();
-                this.QuitKey = ksFrm.KeySet[0];
-                this.ClearKey = ksFrm.KeySet[1];
-                this.TipKey = ksFrm.KeySet[2];
-                this.NewKey = ksFrm.KeySet[3];
-                this.FeaturesKey = ksFrm.KeySet[4];
-                this.SelectAllKey = ksFrm.KeySet[5];
-                this.BorderKey = ksFrm.KeySet[6];
-                this.CopyKey = ksFrm.KeySet[7];
-                this.SaveKey = ksFrm.KeySet[8];
-                this.EditKey = ksFrm.KeySet[9];
-                this.ViewKey = ksFrm.KeySet[10];
-            }
-        } // Set Key Shortcuts
-
-        private void defaultKeysToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            this.QuitKey = Keys.Q;
-            this.ClearKey = Keys.Z;
-            this.TipKey = Keys.T;
-            this.NewKey = Keys.R;
-            this.FeaturesKey = Keys.F;
-            this.SelectAllKey = Keys.A;
-            this.BorderKey = Keys.B;
-            this.CopyKey = Keys.C;
-            this.SaveKey = Keys.S;
-            this.EditKey = Keys.E;
-            this.ViewKey = Keys.V;
-        } // Default Key Shortcuts
-
         // New Leer
         private void newLeerToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -396,7 +338,7 @@ namespace Leer_Copy
                 this.newLeer = true;
                 this.Hide();
             }
-        } // newLeer
+        }
 
         // Exits application
         private void cancelLeerToolStripMenuItem_Click(object sender, EventArgs e)
