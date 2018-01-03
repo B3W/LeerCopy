@@ -20,11 +20,11 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" >
-	<Product Id="*" Name="Leer Copy" Language="1033" Version="1.1.0.0" Manufacturer="Weston Berg" UpgradeCode="PUT-GUID-HERE" >
+	<Product Id="*" Name="Leer Copy" Language="1033" Version="2.0.0.0" Manufacturer="Weston Berg" UpgradeCode="PUT-GUID-HERE" >
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64" />
     <!-- Sets logic for upgrading of application -->
 		<MajorUpgrade 
-      Schedule="afterInstallValidate"
+      Schedule="afterInstallFinalize"
       DowngradeErrorMessage="A newer version of [ProductName] is already installed. Setup will now exit." />
     <!-- MediaTemplate to create embedded cabinet -->
     <MediaTemplate EmbedCab="yes"/>
@@ -36,6 +36,13 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
     </Condition>
     <Condition Message="Leer Copy was developed for 64-bit OS. 32-bit OS detected setup exiting...">
       <![CDATA[(VersionNT64)]]>
+    </Condition>
+    <!-- Check for Version 1.0.0.0. ProductCode = {F6821CF0-3AD7-452B-B669-DD919191395D} -->
+    <Property Id="PRODUCTVERSION">
+      <RegistrySearch Id="ProductVersionSearch" Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Uninstall\{F6821CF0-3AD7-452B-B669-DD919191395D}" Name="DisplayVersion" Type="raw" Win64="yes" />
+    </Property>
+    <Condition Message="Leer Copy [PRODUCTVERSION] detected... Due to mistakes in initial MSI please uninstall previous version and retry 2.0 install. This problem was fixed and will not be propagated to future MSIs.">
+      <![CDATA[NOT PRODUCTVERSION OR NOT PRODUCTVERSION = "1.0.0.0"]]>
     </Condition>
     <!-- Icon -->
     <Icon Id="LeerIcon.exe" SourceFile="$(var.Leer Copy.ProjectDir)LeerIcon.ico"/>
@@ -79,7 +86,7 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
     </DirectoryRef>
     <!-- UI -->
     <!-- ARPNOMODIFY referenced in WixUI_Minimal.wxs -->
-    <WixVariable Id="WixUILicenseRtf" Value="$(var.Leer Copy.ProjectDir)LICENSE.rtf"/>
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.Leer Copy.ProjectDir)GNU LICENSE.rtf"/>
     <UI>
       <UIRef Id="WixUI_Minimal" />
       <Publish Dialog="ExitDialog"
@@ -95,7 +102,8 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
 		<Feature Id="ProductFeature" Title="LeerCopySetup" Description="Installer for Leer Copy App" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
       <ComponentGroupRef Id="DocumentationImages" />
-      <ComponentRef Id="LeerCopyDataFolder"/>
+      <ComponentGroupRef Id="ProductConfiguration"/>
+      <ComponentRef Id="AppData" />
       <ComponentRef Id="LeerMenuShortcut" />
       <ComponentRef Id="LeerDesktopShortcut" />
 		</Feature>
@@ -112,23 +120,20 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
 			</Directory>
     </DirectoryRef>
   </Fragment>
-  <!-- Create AppData dir/Delete on uninstall -->
+  <!-- AppData dir -->
   <Fragment>
     <DirectoryRef Id="TARGETDIR">
       <Directory Id="AppDataFolder">
         <Directory Id="LeerCopyAppData" Name="Leer Copy" >
-          <Component Id="LeerCopyDataFolder" Guid="PUT-GUID-HERE">
-            <CreateFolder>
-              <util:PermissionEx User="Users" GenericAll="yes"/>
-            </CreateFolder>
-            <RemoveFile Id="DeleteAppData" Name="*" On="uninstall"/>
-            <RemoveFolder Id="DeleteAppDataFolder" Directory="LeerCopyAppData" On="uninstall" />
+          <Component Id="AppData" Guid="*">
+            <RemoveFile Id="RemoveAppDataFiles" Name="log.txt" Directory="LeerCopyAppData" On="uninstall"/>
+            <RemoveFolder Id="RemoveAppData" Directory="LeerCopyAppData" On="uninstall"/>
             <RegistryValue Root="HKCU" 
-                  Key="Software\Leer Copy" 
-                  Name="installed"
-                  Type="integer"
-                  Value="1"
-                  KeyPath="yes" />
+                           Key="Software\Leer Copy" 
+                           Name="installed"
+                           Type="integer"
+                           Value="1"
+                           KeyPath="yes" />
           </Component>
         </Directory>
       </Directory>
@@ -166,6 +171,20 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
         <File Id="LeerHOWTO" Name="QuickStart.html" Source="$(var.Leer Copy.ProjectDir)..\QuickStart.html" ProcessorArchitecture="x64" KeyPath="yes" />
       </Component>
 		</ComponentGroup>
+  </Fragment>
+  <!-- Product Configuration -->
+  <Fragment>
+    <ComponentGroup Id="ProductConfiguration" Directory="LeerCopyAppData">
+      <Component Id="AppConfig" Guid="PUT-GUID-HERE" Win64="yes" >
+        <File Id="LeerCONFIG" Name="leerConfig.xml" Source="$(var.Leer Copy.ProjectDir)\bin\Debug\leerConfig.xml" ProcessorArchitecture="x64" />
+        <RegistryValue Root="HKCU" 
+                           Key="Software\Leer Copy" 
+                           Name="installed"
+                           Type="integer"
+                           Value="1"
+                           KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
   </Fragment>
   <!-- Images for documentation -->
   <Fragment>
