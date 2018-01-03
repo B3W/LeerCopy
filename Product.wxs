@@ -20,7 +20,7 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" >
-	<Product Id="*" Name="Leer Copy" Language="1033" Version="1.1.0.0" Manufacturer="Weston Berg" UpgradeCode="ad77020b-3c84-4b7e-8a24-7c7c9dfbff53" >
+	<Product Id="*" Name="Leer Copy" Language="1033" Version="1.0.0.0" Manufacturer="Weston Berg" UpgradeCode="PUT-GUID-HERE" >
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64" />
     <!-- Sets logic for upgrading of application -->
 		<MajorUpgrade 
@@ -43,7 +43,7 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
     <Property Id="ARPPRODUCTICON" Value="LeerIcon.exe" />
     <!-- Start Menu Shortcut-->
     <DirectoryRef Id="ApplicationProgramsFolder" >
-      <Component Id="LeerMenuShortcut" Guid="dceedbdf-841e-4770-ace3-cf66181f9e10" Win64="yes">
+      <Component Id="LeerMenuShortcut" Guid="PUT-GUID-HERE" Win64="yes">
         <Shortcut Id="LeerStartMenuShortcut"
                   Name="Leer Copy"
                   Description="Screen copier app"
@@ -61,7 +61,7 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
     </DirectoryRef>
     <!-- Desktop Shortcut -->
     <DirectoryRef Id="DesktopFolder">
-        <Component Id="LeerDesktopShortcut" Guid="af9c9869-4d8c-4023-85e9-ca5698cd5ff0" Win64="yes">
+        <Component Id="LeerDesktopShortcut" Guid="PUT-GUID-HERE" Win64="yes">
           <Shortcut Id="LeerDTShortcut" 
                     Name="Leer Copy"
                     Description="Screen copier app"
@@ -79,7 +79,7 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
     </DirectoryRef>
     <!-- UI -->
     <!-- ARPNOMODIFY referenced in WixUI_Minimal.wxs -->
-    <WixVariable Id="WixUILicenseRtf" Value="$(var.Leer Copy.ProjectDir)GNU LICENSE.rtf"/>
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.Leer Copy.ProjectDir)LICENSE.rtf"/>
     <UI>
       <UIRef Id="WixUI_Minimal" />
       <Publish Dialog="ExitDialog"
@@ -117,7 +117,7 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
     <DirectoryRef Id="TARGETDIR">
       <Directory Id="AppDataFolder">
         <Directory Id="LeerCopyAppData" Name="Leer Copy" >
-          <Component Id="LeerCopyDataFolder" Guid="a64c570e-41d0-4b61-97dd-859f21f355e9">
+          <Component Id="LeerCopyDataFolder" Guid="PUT-GUID-HERE">
             <CreateFolder>
               <util:PermissionEx User="Users" GenericAll="yes"/>
             </CreateFolder>
@@ -159,10 +159,10 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
   <!-- Main product components -->
 	<Fragment>
 		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER" >
-			<Component Id="ProductComponent" Guid="a9dbfe68-8768-4f08-8fa5-1cb3b00a25c0" Win64="yes" >
+			<Component Id="ProductComponent" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="LeerEXE" Name="$(var.Leer Copy.TargetFileName)" Source="$(var.Leer Copy.TargetPath)" ProcessorArchitecture="x64" KeyPath="yes" />
 			</Component>
-      <Component Id="ProductDocumentation" Guid="0034e6a5-b49b-4411-b956-3e6637071e26" Win64="yes" >
+      <Component Id="ProductDocumentation" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="LeerHOWTO" Name="QuickStart.html" Source="$(var.Leer Copy.ProjectDir)..\QuickStart.html" ProcessorArchitecture="x64" KeyPath="yes" />
       </Component>
 		</ComponentGroup>
@@ -170,25 +170,25 @@ along with Leer Copy.  If not, see <http://www.gnu.org/licenses/>.
   <!-- Images for documentation -->
   <Fragment>
     <ComponentGroup Id="DocumentationImages" Directory="DocumentationImagesDir">
-      <Component Id="KeyboardPic" Guid="e543902d-1a77-4fb9-aef9-eaf0b9863704" Win64="yes" >
+      <Component Id="KeyboardPic" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="Keyboard" Name="KeyboardMouse.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\KeyboardMouse.png" ProcessorArchitecture="x64" />
       </Component>
-      <Component Id="LeerIcon" Guid="fdbec154-dc70-498e-8ee0-23882bbd267f" Win64="yes" >
+      <Component Id="LeerIcon" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="Ico" Name="LeerIcon.ico" Source="$(var.Leer Copy.ProjectDir)..\bin\images\LeerIcon.ico" ProcessorArchitecture="x64" KeyPath="yes" />
       </Component>
-      <Component Id="LeerPic" Guid="6836f48d-c7cd-4294-8312-d3e42d202d55" Win64="yes" >
+      <Component Id="LeerPic" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="IcoPNG" Name="LeerIcon.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\LeerIcon.png" ProcessorArchitecture="x64" KeyPath="yes" />
       </Component>
-      <Component Id="Selection" Guid="1f3bd4d1-87ca-484d-9713-695cd272a3c4" Win64="yes" >
+      <Component Id="Selection" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="AreaSelect" Name="Selection.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\Selection.png" ProcessorArchitecture="x64" />
       </Component>
-      <Component Id="SettingsOne" Guid="41364fcb-ab36-4377-8aba-fb33078ac584" Win64="yes" >
+      <Component Id="SettingsOne" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="Features" Name="SettingsFeaturesOpen.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\SettingsFeaturesOpen.png" ProcessorArchitecture="x64" />
       </Component>
-      <Component Id="SettingsTwo" Guid="650dae45-7153-49f7-8349-94baa0bf4c22" Win64="yes" >
+      <Component Id="SettingsTwo" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="Settings" Name="SettingsWindow.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\SettingsWindow.png" ProcessorArchitecture="x64" />
       </Component>
-      <Component Id="Tips" Guid="17926e70-ab4c-4760-88cd-03f0d460b6d1" Win64="yes" >
+      <Component Id="Tips" Guid="PUT-GUID-HERE" Win64="yes" >
         <File Id="TipsArea" Name="Tips.png" Source="$(var.Leer Copy.ProjectDir)..\bin\images\Tips.png" ProcessorArchitecture="x64" />
       </Component>
     </ComponentGroup>
