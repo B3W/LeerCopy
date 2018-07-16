@@ -105,6 +105,9 @@ namespace Leer_Copy
         /// Tells main program if restart is required
         /// </summary>
         public Boolean NeedsRestart { get; private set; }
+        /// <summary>
+        /// Flag for determining if the user should be given instructions when starting new Leer
+        /// </summary>
         private Boolean showOnNewLeer;
         // Fields containing user shortcut keys
         private Keys quitKey;
@@ -116,6 +119,7 @@ namespace Leer_Copy
         private Keys borderKey;
         private Keys copyKey;
         private Keys saveKey;
+        private Keys printKey = Keys.P;
         private Keys editKey;
         private Keys viewKey;
         /// <summary>
@@ -241,6 +245,10 @@ namespace Leer_Copy
                     else if (e.KeyCode == this.saveKey)  // Save selection as .png
                     {
                         SaveSelection();
+                    }
+					else if (e.KeyCode == this.printKey)  // Print the selection
+                    {
+                        PrintSelection();
                     }
                     else if (e.KeyCode == this.editKey)  // Send selection to image editor and exit
                     {
@@ -1283,6 +1291,12 @@ namespace Leer_Copy
             }
         } // SaveSelection_Click
 
+		// Prints user's selection
+        private void PrintSelection_Click(object sender, EventArgs e)
+        {
+            PrintSelection();
+        } // PrintSelection_Click
+		
         // Sends users selection to default editor in Context Menu
         private void EditSelection_Click(object sender, EventArgs e)
         {
@@ -1353,6 +1367,55 @@ namespace Leer_Copy
             }
         } // SaveSelection
 
+		// Function for printing the selection
+        private void PrintSelection()
+        {
+            if (this.isDrawn == true && this.isDrawing == false && ComparePoints(this.startPt, this.currPt) != -1)  // Make sure user has made a selection
+            {
+                this.transparentFrm.TopMost = false;
+
+                PrintDocument printDoc = new PrintDocument();    // Prepare the print document
+                printDoc.PrintPage += PrintPage;
+                PrintDialog printDialog = new PrintDialog        // Configure print dialog with print document
+                {
+                    Document = printDoc,
+                    UseEXDialog = true
+                };
+                if (printDialog.ShowDialog() == DialogResult.OK)  // Confirm User wants to print
+                {
+                    printDoc.Print();
+                }
+                this.transparentFrm.TopMost = true;
+            }
+        } // PrintSelection
+
+        // Helper method for getting the bitmap selection to print
+        private void PrintPage(object obj, PrintPageEventArgs e)
+        {
+            Rectangle imagePortion = GetImagePortion(true);
+            using (Bitmap finalSelection = this.screenIm.Clone(imagePortion, screenIm.PixelFormat))  // Print selected bitmap
+            {
+                Rectangle pgBounds = e.PageBounds;  // Make sure the selection fits on the page
+                Size selectionSize = ResizeFit(new Size(finalSelection.Width, finalSelection.Height), new Size(pgBounds.Width, pgBounds.Height));   // Resize if necessary
+                
+                e.Graphics.DrawImage(finalSelection, new Rectangle(0, 0, selectionSize.Width, selectionSize.Height));
+            }
+        } // PrintPage
+
+        // Method for resizing selection when necessary
+        // Helped by jbc @ https://stackoverflow.com/a/17197425
+        private Size ResizeFit(Size originalSize, Size maxSize)
+        {
+            var widthRatio = (double)maxSize.Width / (double)originalSize.Width;
+            var heightRatio = (double)maxSize.Height / (double)originalSize.Height;
+            var minAspectRatio = Math.Min(widthRatio, heightRatio);
+            if (minAspectRatio > 1) // Resize by the minimum aspect ration if necessary
+            {
+                return originalSize;
+            }
+            return new Size((int)(originalSize.Width * minAspectRatio), (int)(originalSize.Height * minAspectRatio));
+        } // ResizeFit
+		
         // Function for saving to clipboard
         private void CopySelection()
         {
@@ -1519,6 +1582,7 @@ namespace Leer_Copy
             cmenu.MenuItems.Add(new MenuItem("Edit", EditSelection_Click));
             cmenu.MenuItems.Add(new MenuItem("Save", SaveSelection_Click));
             cmenu.MenuItems.Add(new MenuItem("View", ViewSelection_Click));
+			cmenu.MenuItems.Add(new MenuItem("Print", PrintSelection_Click));
             cmenu.MenuItems.Add(new MenuItem("Settings", Settings_Click));
             MenuItem exit = new MenuItem("Exit");
             exit.Click += delegate (object sender, EventArgs e)
